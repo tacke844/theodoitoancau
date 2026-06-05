@@ -1,17 +1,96 @@
 // Danh sách thông báo mẫu
 const notifications = [
     "Tài khoản 0399xxx090 kích hoạt thành công",
-    "Tài khoản 0912xxx345 đã được cập nhật",
+    "Tài khoản 0912xxx345 kích hoạt thành công",
     "Tài khoản 0987xxx123 kích hoạt thành công",
-    "Tài khoản 0901xxx567 đã được xác thực",
+    "Tài khoản 0901xxx567 kích hoạt thành công",
     "Tài khoản 0913xxx890 kích hoạt thành công",
-    "Tài khoản 0988xxx234 đã được cập nhật",
+    "Tài khoản 0988xxx234 kích hoạt thành công",
     "Tài khoản 0909xxx678 kích hoạt thành công"
 ];
 
-// Biến global để lưu trữ timer
-let notificationTimer;
-let countdownTimer;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const notificationArea = document.getElementById("notificationArea");
+
+    let currentIndex = 0;
+    const visibleCount = 2;
+    const itemHeight = 40;
+    const intervalTime = 2500;
+    const animationTime = 500;
+
+    notificationArea.style.position = "absolute";
+    notificationArea.style.left = "0";
+    notificationArea.style.right = "0";
+    notificationArea.style.top = "0";
+    notificationArea.style.transform = "translateY(0)";
+    notificationArea.style.transition = "none";
+    notificationArea.style.willChange = "transform";
+
+    function createNotification(text) {
+        const div = document.createElement("div");
+
+        div.className = `
+            h-10 flex items-center px-3 mb-0
+            text-white text-sm rounded-md
+            bg-black/40 backdrop-blur-lg
+            border border-white/20
+            shadow-md
+        `;
+
+        div.textContent = text.trim();
+        return div;
+    }
+
+    function initNotifications() {
+        notificationArea.innerHTML = "";
+
+        for (let i = 0; i < visibleCount; i++) {
+            const index = (currentIndex + i) % notifications.length;
+            notificationArea.appendChild(createNotification(notifications[index]));
+        }
+
+        currentIndex = visibleCount % notifications.length;
+
+        requestAnimationFrame(() => {
+            notificationArea.style.opacity = "1";
+
+            requestAnimationFrame(() => {
+                notificationArea.style.transition = `transform ${animationTime}ms ease`;
+            });
+        });
+    }
+
+    function slideNextNotification() {
+        const nextNotification = createNotification(notifications[currentIndex]);
+        notificationArea.appendChild(nextNotification);
+
+        requestAnimationFrame(() => {
+            notificationArea.style.transform = `translateY(-${itemHeight}px)`;
+        });
+
+        setTimeout(() => {
+            notificationArea.style.transition = "none";
+            notificationArea.style.transform = "translateY(0)";
+
+            if (notificationArea.firstElementChild) {
+                notificationArea.removeChild(notificationArea.firstElementChild);
+            }
+
+            currentIndex = (currentIndex + 1) % notifications.length;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    notificationArea.style.transition = `transform ${animationTime}ms ease`;
+                });
+            });
+        }, animationTime);
+    }
+
+    initNotifications();
+
+    setInterval(slideNextNotification, intervalTime);
+});
 
 // Khởi tạo khi trang load
 document.addEventListener("DOMContentLoaded", function () {
@@ -42,33 +121,6 @@ function initializeApp() {
     });
 }
 
-// Hiển thị thông báo chạy từ dưới lên
-function startNotifications() {
-    const notificationArea = document.getElementById("notificationArea");
-
-    function showNotification() {
-        const randomNotification = notifications[Math.floor(Math.random() * notifications.length)];
-
-        const notificationElement = document.createElement("div");
-        notificationElement.className = "notification-scroll text-white text-sm p-2 bg-black/30 rounded mb-2";
-        notificationElement.textContent = randomNotification;
-
-        notificationArea.appendChild(notificationElement);
-
-        // Xóa thông báo sau khi animation hoàn thành
-        setTimeout(() => {
-            if (notificationElement.parentNode) {
-                notificationElement.parentNode.removeChild(notificationElement);
-            }
-        }, 3000);
-    }
-
-    // Hiển thị thông báo đầu tiên ngay lập tức
-    showNotification();
-
-    // Tiếp tục hiển thị thông báo mỗi 4 giây
-    notificationTimer = setInterval(showNotification, 4000);
-}
 
 // Validate số điện thoại đơn giản
 function validatePhoneNumber(phone) {
@@ -98,7 +150,7 @@ async function handleLogin() {
     showLoadingScreen();
 
     try {
-        // Gọi API để kiểm tra mã phần mềm (mock API)
+        // Gọi API để kiểm tra mã phần mềm
         const isValid = await validateSoftwareCode(softwareCode);
 
         if (isValid) {
@@ -115,6 +167,7 @@ async function handleLogin() {
         showLoginScreen();
     }
 }
+
 // API endpoint
 const API_URL = "https://eqje1a.mockapi.dog/";
 
@@ -172,17 +225,17 @@ function showLoadingScreen() {
     document.getElementById("loadingScreen").classList.remove("hidden");
 
     // Dừng thông báo khi loading
-    if (notificationTimer) {
-        clearInterval(notificationTimer);
-    }
+    stopNotifications();
 
     // Animate progress bar
     let progress = 0;
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
-    // ✅ Reset về 0 mỗi lần bắt đầu
+
+    // Reset về 0 mỗi lần bắt đầu
     progressBar.style.width = "0%";
     progressText.textContent = "0%";
+
     const progressInterval = setInterval(() => {
         progress += Math.random() * 15 + 5; // Tăng ngẫu nhiên 5-20%
         if (progress > 100) progress = 100;
@@ -315,11 +368,9 @@ function showPackageScreen() {
 
 // Cleanup khi trang được unload
 window.addEventListener("beforeunload", function () {
-    if (notificationTimer) {
-        clearInterval(notificationTimer);
-    }
+    stopNotifications();
+
     if (countdownTimer) {
         clearInterval(countdownTimer);
     }
 });
-
