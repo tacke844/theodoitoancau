@@ -224,8 +224,7 @@ function showLoadingScreen() {
     hideAllScreens();
     document.getElementById("loadingScreen").classList.remove("hidden");
 
-    // Dừng thông báo khi loading
-    stopNotifications();
+
 
     // Animate progress bar
     let progress = 0;
@@ -358,7 +357,6 @@ function hideAllScreens() {
 function showLoginScreen() {
     hideAllScreens();
     document.getElementById("loginScreen").classList.remove("hidden");
-    startNotifications();
 }
 
 function showPackageScreen() {
@@ -368,7 +366,7 @@ function showPackageScreen() {
 
 // Cleanup khi trang được unload
 window.addEventListener("beforeunload", function () {
-    stopNotifications();
+
 
     if (countdownTimer) {
         clearInterval(countdownTimer);
